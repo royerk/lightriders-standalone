@@ -1,7 +1,7 @@
-Hackman Engine
+LightRiders Engine
 =========================
 
-Standalone engine for Hackman on Riddles.io
--------------------------------------------
+Standalone engine for LightRiders on starapple.riddles.io
+---------------------------------------------------------
 
 In development, there may be bugs!
