@@ -1,0 +1,6 @@
+.*
+game_logs
+__pycache__*
+*.pyc
+scripts
+visualizer
