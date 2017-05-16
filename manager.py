@@ -105,24 +105,24 @@ class Match:
 
     def parse_results_string(self):
         lines = self.results_string.split("\n")
-        if len(lines) < (2 + (2 * self.num_players)):
-            raise ValueError("Not enough lines in match output")
-        else:
-            for count, line in enumerate(lines):
-                if (line.startswith ("score ")):
-                    print(line)
-                    scores = line.split(" ")
-                    p0 = int(scores[1])
-                    p1 = int(scores[2])
-                    if (p0 > p1):
-                        self.results[0] = 0
-                        self.results[1] = 1
-                    elif (p1 > p0):
-                        self.results[0] = 1
-                        self.results[1] = 0
-                    else:
-                        self.results[0] = 0
-                        self.results[1] = 0
+        if (len(lines) < 5):
+            print("Error:")
+            print(lines)
+        for count, line in enumerate(lines):
+            if (line.startswith ("score ")):
+                print(line)
+                scores = line.split(" ")
+                p0 = int(scores[1])
+                p1 = int(scores[2])
+                if (p0 > p1):
+                    self.results[0] = 0
+                    self.results[1] = 1
+                elif (p1 > p0):
+                    self.results[0] = 1
+                    self.results[1] = 0
+                else:
+                    self.results[0] = 0
+                    self.results[1] = 0
 
 class Manager:
     def __init__(self, halite_binary, db_filename, players=None, rounds=-1):

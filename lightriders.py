@@ -135,8 +135,8 @@ class Lightriders(Game):
         return grid
 
     def choose_player_locs (self, rows, cols):
-        row = random.randint(0, rows)
-        col_offset = random.randint(1, cols / 2 - 1)
+        row = random.randint(0, rows - 1)
+        col_offset = random.randint(1, (cols - 2) / 2)
         self.players[0].row = row
         self.players[0].prev_row = row
         self.players[1].row = row
