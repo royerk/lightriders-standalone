@@ -11,7 +11,6 @@ from game import Game
 from copy import deepcopy
 
 import player
-import bug
 
 try:
     from sys import maxint
@@ -22,11 +21,10 @@ LAND = -2
 WATER = -1
 MAP_OBJECT = '.%'
 
-PLAYER1 = 0
-PLAYER2 = 1
-BUG = 2
-WEAPON = 3
-CODE = 4
+PLAYER0 = 0
+PLAYER1 = 1
+WALL = 2
+EMPTY = 3
 
 VALID_ORDERS = ["up", "down", "left", "right", "pass"]
 
@@ -42,12 +40,11 @@ WEAPON_SPAWN_DELAY = 20
 BUG_SPAWN_COUNT = 5
 HIT_PENALTY = 4
 
-class Hackman(Game):
+class Lightriders(Game):
     def __init__(self, options=None):
         self.width = 0
         self.height = 0
         self.cutoff = None
-        map_text = options['map']
 #        self.turns = int(options['turns'])
 #        self.loadtime = int(options['loadtime'])
 #        self.turntime = int(options['turntime'])
@@ -98,41 +95,26 @@ class Hackman(Game):
         ### collect turns for the replay
         self.replay_data = []
 
-        self.server = []    # server room locations
-        self.bugs = []
-        self.snippets_collected = 0
-        self.map_data = self.parse_map(map_text)
+        self.map_data = self.new_map ()
 
-        self.spawn_snippet()
-        self.spawn_snippet()
 
     def string_cell_item(self, item):
-        if item == PLAYER1:
+        if item == PLAYER0:
             return '0'
-        elif item == PLAYER2:
+        elif item == PLAYER1:
             return '1'
-        elif item == BUG:
-            return 'E'
-        elif item == WEAPON:
-            return 'W'
-        elif item == CODE:
-            return 'C'
+        elif item == EMPTY:
+            return '.'
+        elif item == WALL:
+            return 'x'
         else:
-            return ''
+            return ' '
 
     def in_bounds (self, row, col):
         return row >= 0 and col >= 0 and col < self.width and row < self.height
 
     def output_cell (self, cell):
-        if len(cell) == 0:
-            return '.'
-        elif WATER in cell:
-            return 'x'
-        else:
-            result = ""
-            for item in cell:
-                result += self.string_cell_item(item)
-            return result
+        return self.string_cell_item(cell)
 
     def string_field (self, field):
         flat = []
@@ -142,83 +124,40 @@ class Hackman(Game):
         return (','.join([self.output_cell (cell) for cell in flat]))
 
     def init_grid (self, rows, cols):
-        result = []
-        for r in range(0, rows):
-            result.append([])
-            for c in range(0, cols):
-                result[r].append([])
-        return result
-                
 
-    def parse_map(self, map_text):
-        """ Parse the map_text into a more friendly data structure """
-        cols = None
-        rows = None
-        agents_per_player = None
-        agents = []
-        num_players = None
-        count_row = 0
-        grid = [[]]
-        for line in map_text.split("\n"):
-            line = line.strip()
+        grid = []
 
-            # ignore blank lines and comments
-            if not line or line[0] == "#":
-                continue
+        for row in range(0, rows):
+            grid.append([])
+            for col in range(0, cols):
+                grid[row].append(EMPTY)
 
-            key, value = line.split(" ", 1)
-            key = key.lower()
+        return grid
 
-            if key == "cols":
-                cols = int(value)
-                self.width = cols
-                if rows != None:
-                    grid = self.init_grid(rows, cols)
-            elif key == "rows":
-                rows = int(value)
-                self.height = rows
-                if cols != None:
-                    grid = self.init_grid(rows, cols)
+    def choose_player_locs (self, rows, cols):
+        row = random.randint(0, rows)
+        col_offset = random.randint(1, cols / 2 - 1)
+        self.players[0].row = row
+        self.players[0].prev_row = row
+        self.players[1].row = row
+        self.players[1].prev_row = row
 
-            elif key == 'p':
-                loc = value.split()
-                p_num = int(loc[0])
-                p_row = int(loc[1])
-                p_col = int(loc[2])
-                self.players[p_num].row = p_row
-                self.players[p_num].col = p_col
-                grid[p_row][p_col].append(p_num)
+        self.players[0].col = col_offset
+        self.players[0].prev_col = col_offset
+        self.players[1].col = cols - (col_offset + 1)
+        self.players[1].prev_col = cols - (col_offset + 1)
 
-            elif key == 'm':
-                if len(value) != cols:
-                    raise Exception("map",
-                                    "Incorrect number of cols in row %s. "
-                                    "Got %s, expected %s."
-                                    %(row, len(value), width))
-                for count_col, c in enumerate(value):
-                    if c == MAP_OBJECT[WATER]:
-#                        print("len grid = " + str(len (grid)))
-#                        print("len grid[0] = " + str(len (grid[0])))
-                        grid[count_row][count_col].append(WATER)
-#                    elif c == MAP_OBJECT[LAND]:
-#                        grid[count_row][count_col].append(LAND)
-                    elif c not in MAP_OBJECT:
-                        raise Exception("map",
-                                        "Invalid character in map: %s" % c)
-                count_row += 1
+        self.field[row][col_offset] = PLAYER0
+        self.field[row][cols - (col_offset + 1)] = PLAYER1
 
-            elif key == 's':    # server room
-                loc = value.split()
-                p_row = int(loc[0])
-                p_col = int(loc[1])
-                self.server.append((p_row, p_col))
-
-        if count_row != rows:
-                    raise Exception("map",
-                                    "Incorrect number of rows in map "
-                                    "Got %s, expected %s."
-                                    %(count_row, rows))
+    def new_map (self):
+        rows = random.randint(10, 20)
+        cols = random.randint(10, 20)
+        self.height = rows
+        self.width = cols
+        grid = self.init_grid (rows, cols)
         self.field = grid
+        self.choose_player_locs(rows, cols)
         return {
             "size": (rows, cols),
             "grid" : grid }
@@ -241,12 +180,6 @@ class Hackman(Game):
         changes = []
         changes.extend([['update game round', self.turn + 1]])
         changes.extend([['update game field', self.string_field(self.field)]])
-        changes.extend([['update player0 snippets', self.players[0].snippets]])
-        changes.extend([['update player0 has_weapon', self.players[0].has_weapon]])
-        changes.extend([['update player0 is_paralyzed', self.players[0].is_paralyzed]])
-        changes.extend([['update player1 snippets', self.players[1].snippets]])
-        changes.extend([['update player1 has_weapon', self.players[1].has_weapon]])
-        changes.extend([['update player1 is_paralyzed', self.players[1].is_paralyzed]])
         changes.extend([['action move', int(time_to_move * 1000)]]) 
         return changes
 
@@ -314,22 +247,14 @@ class Hackman(Game):
         return [0, 1]
 
     def board_symbol(self, cell):
-        if PLAYER1 in cell:
+        if PLAYER0 == cell:
             return '0'
-        elif PLAYER2 in cell:
+        elif PLAYER1 == cell:
             return '1'
-        elif BUG in cell:
-            return 'E'
-        elif WEAPON in cell:
-            return 'W'
-        elif CODE in cell:
-            return 'C'
-        elif LAND in cell:
+        elif EMPTY == cell:
             return '.'
-        elif WATER in cell:
+        elif WALL == cell:
             return 'x'
-        elif len(cell) == 0:
-            return '.'
         else:
             raise ValueError ("Invalid board_symbol: " + str(cell))
 
@@ -342,8 +267,8 @@ class Hackman(Game):
         print("\n")
 
     def player_cell (self, player):
-        if player == 0: return PLAYER1 
-        else: return PLAYER2
+        if player == 0: return PLAYER0 
+        else: return PLAYER1
 
     def adjacent_coords (self, row, col):
         result = []
@@ -353,292 +278,31 @@ class Hackman(Game):
                 result.append((trow, tcol))
         return result
 
+    def not_blocked(self, row, col):
+        return (self.field[row][col] != WALL)
+
     def is_legal(self, player, row, col):
         in_range = (row, col) in self.adjacent_coords(self.players[player].row, self.players[player].col)
-        not_blocked = (WATER not in self.field[row][col])
-        return in_range and not_blocked
+        not_reverse = (row != self.players[player].prev_row or col != self.players[player].prev_col)
+        return in_range and not_reverse and self.not_blocked (row, col)
 
     def place_move(self, move):
         (player, row, col) = move
         p = self.players[player]
         if self.is_legal (player, row, col):
-            self.field[p.row][p.col].remove(self.player_cell(player))
-            self.field[row][col].append(self.player_cell(player))
+            self.field[p.row][p.col] = WALL
+            self.field[row][col] = player
             p.prev_row = p.row
             p.prev_col = p.col
             p.row = row
             p.col = col
-
-    def remove_snippets(self, row, col):
-        self.field[row][col] = [x for x in self.field[row][col] if x != CODE]
-
-    def remove_sword(self, row, col):
-        result = []
-        removed = False
-        for item in self.field[row][col]:
-            if item == WEAPON and not removed:
-                removed = True
-            else:
-                result.append(item)
-        self.field[row][col] = result
-
-    def remove_cell_bug(self, row, col):
-        result = []
-        removed = False
-        for item in self.field[row][col]:
-            if item == BUG and not removed:
-                removed = True
-            else:
-                result.append(item)
-        self.field[row][col] = result
-
-    def remove_list_bug(self, row, col):
-        removed = False
-        result = []
-        for bug in self.bugs:
-            if (not removed) and bug.row == row and bug.col == col:
-                removed = True
-            else:
-                result.append(bug)
-        self.bugs = result
-
-    def remove_list_bugs(self, row, col):
-        result = []
-        for bug in self.bugs:
-            if bug.row == row and bug.col == col:
-                removed = True
-            else:
-                result.append(bug)
-        self.bugs = result
-
-    def remove_bug(self, row, col):
-        self.remove_cell_bug(row, col)
-        self.remove_list_bug(row, col)
-
-    def random_empty_cell(self):
-        empty = []
-        for (ir, row) in enumerate(self.field):
-            for (ic, cell) in enumerate(row):
-                if len(cell) == 0:
-                    empty.append((ir, ic))
-        if len(empty) > 0:
-            return random.choice(empty)
         else:
-            return None
+            self.kill_player (player)
 
-    def spawn_snippet(self):
-        chosen = self.random_empty_cell()
-        if chosen:
-            (row, col) = chosen
-            self.field[row][col].append(CODE)
-
-    def spawn_weapon(self):
-        chosen = self.random_empty_cell()
-        if chosen:
-            (row, col) = chosen
-            self.field[row][col].append(WEAPON)
-
-    def spawn_bug(self):
-        if len(self.server) > 0:
-            chosen = random.choice(self.server)
-            (row, col) = chosen
-            newbug = bug.Bug()
-            newbug.row = row
-            newbug.col = col
-            newbug.dir = random.randint(0, 3)
-            newbug.prev_row = row
-            newbug.prev_col = col
-            self.bugs.append(newbug)
-            self.field[row][col].append(BUG)
-
-    def players_in_cell(self, cell):
-        result = []
-        for item in cell:
-            if ((item == PLAYER1) or (item == PLAYER2)) and (item not in result):
-                result.append(item)
-        return result
-
-    def bugs_in_cell(self, cell):
-        result = 0
-        for item in cell:
-            if item == BUG:
-                result += 1
-        return result
-
-    def snippets_in_cell(self, cell):
-        result = 0
-        for item in cell:
-            if item == CODE:
-                result += 1
-        return result
-
-    def swords_in_cell(self, cell):
-        result = 0
-        for item in cell:
-            if item == WEAPON:
-                result += 1
-        return result
-
-    def award_snippets(self, player, number):
-        self.players[player].has_collected = True
-        self.players[player].snippets += number
-        self.snippets_collected += number
-        sys.stdout.write(str(number) + " snippet(s) picked up by player" + str(player) + ", score is " + str(self.players[player].snippets) + "\n")
-        while self.snippets_collected >= BUG_SPAWN_COUNT:
-            self.snippets_collected -= BUG_SPAWN_COUNT
-            self.spawn_bug()
-
-    def award_sword(self, player):
-        self.players[player].has_weapon = True
-        sys.stdout.write("Sword picked up by player" + str(player) + "\n")
-
-    def players_with_swords(self, players):
-        result = 0
-        for player in players:
-            p = self.players[player]
-            if p.has_weapon:
-                result += 1
-        return result
-
-    def collide_players(self, player_a, player_b):
-        if player_a.has_weapon:
-            player_a.has_weapon = False
-            player_b.snippets -= HIT_PENALTY
-            for _ in range(0, HIT_PENALTY):
-                self.spawn_snippet()
-        if player_b.has_weapon:
-            player_b.has_weapon = False
-            player_a.snippets -= HIT_PENALTY
-            for _ in range(0, HIT_PENALTY):
-                self.spawn_snippet()
-
-    def collide_bugs(self, player, bugs):
-        p = self.players[player]
-        if p.has_weapon:
-            sys.stdout.write("player" + str(player) + " hits bug with weapon.\n")
-            p.has_weapon = False
-#        elif p.has_collected:
-        else:
-            sys.stdout.write("player" + str(player) + " hit by bug.\n")
-            p.snippets -= HIT_PENALTY
-            sys.stdout.write("player" + str(player) + " score is " + str(p.snippets) + "\n")
-            if p.snippets < 0:
-                self.kill_player(player)
-    
-    def remove_bugs(self, row, col):
-        self.field[row][col] = [x for x in self.field[row][col] if x != BUG]
-        self.remove_list_bugs(row, col)
-
-    def check_collide_players(self):
-        p0 = self.players[0]
-        p1 = self.players[1]
-        if p0.row == p1.row and p0.col == p1.col:
-            self.collide_players(p0, p1)
-
-    def interact(self, cell, row, col):
-        cell_players = self.players_in_cell(cell)
-#        sys.stdout.write(str(cell) + "\n")
-#        sys.stdout.write(str(cell_players) + "\n")
-        cell_bugs = self.bugs_in_cell(cell)
-        cell_snippets = self.snippets_in_cell(cell)
-        cell_swords = self.swords_in_cell(cell)
-        if len(cell_players) > 0:
-#            sys.stdout.write("interacting with player\n")
-            if cell_bugs > 0:
-                bug_killed = min (1, self.players_with_swords(cell_players))
-                for player in cell_players:
-                    self.collide_bugs(player, cell_bugs)
-                if bug_killed > 0:
-                    sys.stdout.write("One bug removed with sword\n")
-                    self.remove_bug(row, col)
-                self.remove_bugs(row, col)
-            if cell_snippets > 0:
-                num_players = len(cell_players)
-#                sys.stdout.write("Player and snippet found in same cell\n")
-                if num_players > 1:
-                    for snippet in range(1, cell_snippets):
-                        chosen = random.choice(cell_players)
-                        self.award_snippets(chosen, 1)
-                else:
-                    self.award_snippets(cell_players[0], cell_snippets)
-                self.remove_snippets(row, col)
-            if cell_swords > 0:
-                num_players = len(cell_players)
-#                sys.stdout.write("Player and snippet found in same cell\n")
-                if num_players > 1:
-                    for sword in range(1, cell_swords):
-                        chosen = random.choice(cell_players)
-                        self.award_sword(chosen)
-                        self.remove_sword(row, col)
-                else:
-                    self.award_sword(cell_players[0])
-                    self.remove_sword(row, col)
-        self.check_collide_players()
-                
-    def remove_specific_bug(self, bug): # FIXME duplicating logic because too sleepy to think
-        self.bugs = [b for b in self.bugs if not (b == bug)]
-        tile_items = []
-        removed = False
-        for item in self.field[bug.row][bug.col]:
-            if not removed and item == BUG:
-                removed = True
-            else:
-                tile_items.append(item)
-        self.field[bug.row][bug.col] = tile_items
-
-    def did_swap(self, e1, e2):
-        return e1.row == e2.prev_row and e1.prev_row == e2.row and e1.col == e2.prev_col and e1.prev_col == e2.col
-
-    def get_bugs_swapped(self, player):
-        return [bug for bug in self.bugs if (self.did_swap(player, bug))]
-
-    def swap_places_interact(self):
-        for pnum, player in enumerate(self.players):
-            bugs_swapped = self.get_bugs_swapped(player)
-            if len(bugs_swapped) > 0:
-                print("swap\n\n")
-                num_bugs = len(bugs_swapped)
-                self.collide_bugs(pnum, num_bugs)
-            for bug in bugs_swapped:
-                self.remove_specific_bug(bug)
-        p0 = self.players[0]
-        p1 = self.players[1]
-        if self.did_swap(p0, p1):
-            self.collide_players(p0, p1)
-                    
-
-    def resolve_interactions(self):
-        self.swap_places_interact()
-        for (ir, row) in enumerate(self.field):
-            for (ic, cell) in enumerate(row):
-                if len(cell) > 0:
-                    self.interact(cell, ir, ic)
-
-    def not_blocked(self, row, col):
-        return (WATER not in self.field[row][col])
-
-    def not_blocked_adjacent(self, row, col):
-        result = []
-        for (count, (orow, ocol)) in enumerate(ADJACENT):
-            trow, tcol = row + orow, col + ocol
-            if self.in_bounds(trow, tcol) and self.not_blocked(trow, tcol):
-                result.append((count, (trow, tcol)))
-        return result
-
-    def move_bug(self, bug, (mdir, (mrow, mcol))):
-        bug.mdir = mdir
-        bug.prev_row = bug.row
-        bug.prev_col = bug.col
-        bug.row = mrow
-        bug.col = mcol
-        self.remove_cell_bug(bug.prev_row, bug.prev_col)
-        self.field[mrow][mcol].append(BUG)
-
-    def move_bugs(self):
-        for bug in self.bugs:
-            legal = self.not_blocked_adjacent(bug.row, bug.col)
-            move = random.choice(legal)
-            self.move_bug(bug, move)
+    def check_collide_heads(self):
+        if (self.players[0].row == self.players[1].row) and (self.players[0].col == self.players[1].col):
+            self.kill_player(0)
+            self.kill_player(1)
 
     def do_orders(self):
         """ Execute player orders and handle conflicts
@@ -649,8 +313,7 @@ class Hackman(Game):
                     self.place_move (self.orders[player][0])
             else:
                 pass
-        self.move_bugs()
-        self.resolve_interactions()
+        self.check_collide_heads()
 
     # Common functions for all games
 
@@ -676,8 +339,7 @@ class Hackman(Game):
         """ Used by engine to signal that a player is out of the game """
         print("Player killed: " + str(player))
         self.killed[player] = True
-        if self.players[player].snippets >= 0:
-            self.players[player].snippets = -1
+        self.score[player] = -1
 
     def start_game(self):
         """ Called by engine at the start of the game """
@@ -688,7 +350,7 @@ class Hackman(Game):
         result = []
 
     def score_game(self):
-            return [self.players[0].snippets, self.players[1].snippets]
+            return [self.score[0], self.score[1]]
 
     def finish_game(self):
         """ Called by engine at the end of the game """
@@ -708,12 +370,7 @@ class Hackman(Game):
     def start_turn(self):
         """ Called by engine at the start of the turn """
         self.turn += 1
-        if (self.turn % CODE_SPAWN_DELAY == 0):
-            self.spawn_snippet()
-        if (self.turn % WEAPON_SPAWN_DELAY == 0):
-            self.spawn_weapon()
         self.text_board()
-#        self.text_macroboard()
         self.orders = [[] for _ in range(self.num_players)]
 
     def finish_turn(self):
@@ -836,7 +493,7 @@ class Hackman(Game):
     def get_stats(self):
         """  Used by engine to report stats
         """
-        stats = {"scores": [self.players[0].snippets, self.players[1].snippets]}
+        stats = {"scores": [self.score[0], self.score[1]]}
         return stats
 
     def get_replay(self):
