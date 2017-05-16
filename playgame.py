@@ -170,7 +170,7 @@ def main(argv):
     log_group = OptionGroup(parser, "Logging Options", "Options that control the logging")
     log_group.add_option("-g", "--game", dest="game_id", default=0, type='int',
                          help="game id to start at when numbering log files")
-    log_group.add_option("-l", "--log_dir", dest="log_dir", default=None,
+    log_group.add_option("-l", "--log_dir", dest="log_dir", default="game_logs",
                          help="Directory to dump replay files to.")
     log_group.add_option('-R', '--log_replay', dest='log_replay',
                          action='store_true', default=False),
