@@ -322,7 +322,7 @@ def run_game(game, botcmds, options):
 
         # send bots final state and score, output to replay file
         game.finish_game()
-        score_line ='score %s\n' % ' '.join(map(str, game.get_scores()))
+        score_line ='Final rank %s\n' % ' '.join(map(str, game.get_scores()))
         status_line = 'status %s\n' % ' '.join(bot_status)
         status_line += 'playerturns %s\n' % ' '.join(map(str, bot_turns))
         end_line = 'end\nplayers %s\n' % len(bots) + score_line + status_line

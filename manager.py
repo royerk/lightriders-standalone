@@ -109,11 +109,11 @@ class Match:
             print("Error:")
             print(lines)
         for count, line in enumerate(lines):
-            if (line.startswith ("score ")):
+            if (line.startswith ("Final rank ")):
                 print(line)
                 scores = line.split(" ")
-                p0 = int(scores[1])
-                p1 = int(scores[2])
+                p0 = int(scores[2])
+                p1 = int(scores[3])
                 if (p0 > p1):
                     self.results[0] = 0
                     self.results[1] = 1
@@ -184,7 +184,7 @@ class Manager:
             self.setup_round(player_dist, map_dist)
 
     def setup_round (self, player_dist, map_dist):
-        num_contestants = random.choice(player_dist)
+        num_contestants = 2
         contestants = self.pick_contestants(num_contestants)
         size_w = random.choice(map_dist)
         size_h = size_w

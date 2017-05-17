@@ -473,7 +473,7 @@ class Lightriders(Game):
             Used by engine for ranking
         """
         #if player is None:
-        return self.score
+        return [0 - s for s in self.score]
         #else:
         #    return self.order_for_player(player, self.score)
 
