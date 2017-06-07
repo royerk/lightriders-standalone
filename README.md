@@ -8,6 +8,8 @@ In development, there may be bugs!
 
 Timekeeping is not enforced properly at this point: it simply gives a fixed amount of time per turn.
 
+Grid size is generated randomly to improve testing capacities, for bots with hard coded grid size check the *new_map()* function in *lightriders.py* (line ~154).
+
 You can use the play_one_game scripts to run single matches.
 
 You can also use the manager.py script for automated testing like so:
@@ -30,3 +32,6 @@ The manager utility relies on the "skills" module, which can be installed throug
     pip3 install skills
 
 Good luck!
+
+##### Erratum for Go bots
+If you have a Go bot made of multiple files which contains classes you won't be able to use `go run /path/*.go` as the bot command. You need to concatenate your code into a single file, with tools like [GoConcatenator](https://github.com/royerk/Python-GoConcatenator) for example.
