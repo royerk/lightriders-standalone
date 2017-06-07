@@ -34,4 +34,4 @@ The manager utility relies on the "skills" module, which can be installed throug
 Good luck!
 
 ##### Erratum for Go bots
-If you have a Go bot made of multiple files which contains classes you won't be able to use `go run /path/*.go` as the bot command. You need to concatenate your code into a single file, with tools like [GoConcatenator](https://github.com/royerk/Python-GoConcatenator) for example.
+If you have a Go bot made of multiple files which contains classes you won't be able to use `go run /path/*.go` as the bot command. You need to concatenate your code into a single file, with tools like [GoConcatenator](https://github.com/royerk/Python-GoConcatenator) for example. Then the command `go run /path/golangBlob.go` is a valid command for the manager.
