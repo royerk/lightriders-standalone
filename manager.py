@@ -78,7 +78,7 @@ class Match:
 
     def get_command(self, binary):
         args1 = ["--verbose", "--fill", "--log_input", "--log_output", "--log_error"] 
-        args2 = ["--log_dir", "game_logs", "--map_file", "map.txt", "--log_stderr", "--turns", "200", "--turntime", "500", "--loadtime", "1500", "--nolaunch"]
+        args2 = ["--log_dir", "game_logs", "--map_file", "map.txt", "--log_stderr", "--turns", "200", "--turntime", "200", "--loadtime", "10000", "--nolaunch"]
         result = [binary] + args1 + args2
         return result + self.paths
 

@@ -135,20 +135,20 @@ class Lightriders(Game):
         return grid
 
     def choose_player_locs (self, rows, cols):
-        row = random.randint(0, rows - 1)
+        row = 7#random.randint(0, rows - 1)
         col_offset = random.randint(1, (cols - 2) / 2)
         self.players[0].row = row
         self.players[0].prev_row = row
         self.players[1].row = row
         self.players[1].prev_row = row
 
-        self.players[0].col = col_offset
-        self.players[0].prev_col = col_offset
-        self.players[1].col = cols - (col_offset + 1)
-        self.players[1].prev_col = cols - (col_offset + 1)
+        self.players[0].col = 3#col_offset
+        self.players[0].prev_col = 3#col_offset
+        self.players[1].col = 12#cols - (col_offset + 1)
+        self.players[1].prev_col = 12#cols - (col_offset + 1)
 
-        self.field[row][col_offset] = PLAYER0
-        self.field[row][cols - (col_offset + 1)] = PLAYER1
+        self.field[7][3] = PLAYER0
+        self.field[7][12] = PLAYER1
 
     def new_map (self):
         rows = 16#random.randint(10, 20)
@@ -180,7 +180,7 @@ class Lightriders(Game):
         changes = []
         changes.extend([['update game round', self.turn + 1]])
         changes.extend([['update game field', self.string_field(self.field)]])
-        changes.extend([['action move', int(time_to_move * 1000)]]) 
+        changes.extend([['action move', int(time_to_move * 1000000)]]) 
         return changes
 
     def convert_move(self, move):
@@ -420,7 +420,7 @@ class Lightriders(Game):
         result = []
         result.append(['settings player_names', ','.join(self.player_names)])
         result.append(['settings your_bot', self.player_names[player]])
-        result.append(['settings timebank', self.timebank])
+        result.append(['settings timebank', self.timebank*1000])
         result.append(['settings time_per_move', self.time_per_move])
         result.append(['settings your_botid', player])
         result.append(['settings field_width', self.width])

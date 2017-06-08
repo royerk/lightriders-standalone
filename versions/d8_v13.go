@@ -258,13 +258,13 @@ func (b Bot) play(g Game) {
 	root.positions[1-g.myBotID] = coordToIndex(eRow, eCol)
 	root.field = g.field.copy()
 
-	fmt.Fprintln(os.Stderr, "eval root:", root.evaluate(0))
+	//fmt.Fprintln(os.Stderr, "eval root:", root.evaluate(0))
 
 	// expand
-	startTree := time.Now()
+	//startTree := time.Now()
 	depth := 8
-	score, intOrder := alphabeta(root, depth, math.Inf(-1), math.Inf(1), root.player)
-	elapsedTime := time.Since(startTree).Nanoseconds()
+	_, intOrder := alphabeta(root, depth, math.Inf(-1), math.Inf(1), root.player)
+	//elapsedTime := time.Since(startTree).Nanoseconds()
 	if intOrder == -1 { // enemy dies immediately
 		fmt.Fprintln(os.Stderr, "Enemy is dying, now :-)")
 		open := g.field.getEmptyNeighbors(coordToIndex(b.row, b.col))
@@ -273,7 +273,7 @@ func (b Bot) play(g Game) {
 		}
 	}
 	// log
-	fmt.Fprintln(os.Stderr, "Depth:", depth, ", time elapsed:", (elapsedTime / 1000000), "ms, score:", score)
+	//fmt.Fprintln(os.Stderr, "Depth:", depth, ", time elapsed:", (elapsedTime / 1000000), "ms, score:", score)
 
 	// play
 	fmt.Println(intToStringOrder(intOrder))
@@ -396,7 +396,7 @@ func (g *Game) run(bot Bot) {
 	g.field = Field{}
 	reader := bufio.NewReader(os.Stdin)
 	//fieldIsSet := false
-	for true {
+	for g.round < 202 {
 		text, _ := reader.ReadString('\n')
 		text = strings.Replace(text, "\n", "", -1)
 		message := strings.Split(text, " ")
