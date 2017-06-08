@@ -151,8 +151,8 @@ class Lightriders(Game):
         self.field[row][cols - (col_offset + 1)] = PLAYER1
 
     def new_map (self):
-        rows = random.randint(10, 20)
-        cols = random.randint(10, 20)
+        rows = 16#random.randint(10, 20)
+        cols = 16#random.randint(10, 20)
         self.height = rows
         self.width = cols
         grid = self.init_grid (rows, cols)

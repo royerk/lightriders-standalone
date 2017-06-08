@@ -13,7 +13,7 @@ try:
 except ImportError:
     from io import StringIO
 
-import visualizer.visualize_locally
+#import visualizer.visualize_locally
 from lightriders import Lightriders
 
 #sys.path.append("../worker")
