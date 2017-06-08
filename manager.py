@@ -115,11 +115,11 @@ class Match:
                 p0 = int(scores[2])
                 p1 = int(scores[3])
                 if (p0 > p1):
-                    self.results[0] = 0
-                    self.results[1] = 1
-                elif (p1 > p0):
                     self.results[0] = 1
                     self.results[1] = 0
+                elif (p1 > p0):
+                    self.results[0] = 0
+                    self.results[1] = 1
                 else:
                     self.results[0] = 0
                     self.results[1] = 0
