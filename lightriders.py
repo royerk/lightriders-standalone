@@ -180,7 +180,7 @@ class Lightriders(Game):
         changes = []
         changes.extend([['update game round', self.turn + 1]])
         changes.extend([['update game field', self.string_field(self.field)]])
-        changes.extend([['action move', int(time_to_move * 1000000)]]) 
+        changes.extend([['action move', int(time_to_move * 1000)]]) 
         return changes
 
     def convert_move(self, move):
@@ -420,7 +420,7 @@ class Lightriders(Game):
         result = []
         result.append(['settings player_names', ','.join(self.player_names)])
         result.append(['settings your_bot', self.player_names[player]])
-        result.append(['settings timebank', self.timebank*1000])
+        result.append(['settings timebank', self.timebank])
         result.append(['settings time_per_move', self.time_per_move])
         result.append(['settings your_botid', player])
         result.append(['settings field_width', self.width])
